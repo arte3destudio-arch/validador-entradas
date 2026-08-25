@@ -523,6 +523,116 @@ function codigoDetectado(codigo) {
 
 function validarCodigo(codigo) {
 
+  mensaje(
+    "⏳ VALIDANDO ENTRADA...\n\n" +
+    "Conectando con el servidor..."
+  );
+
+  const url =
+    URL_APPS_SCRIPT +
+    "?codigo=" +
+    encodeURIComponent(codigo) +
+    "&t=" +
+    Date.now();
+
+  fetch(url, {
+    method: "GET",
+    redirect: "follow"
+  })
+
+  .then(function(response) {
+
+    if (!response.ok) {
+
+      throw new Error(
+        "El servidor respondió con error HTTP " +
+        response.status
+      );
+
+    }
+
+    return response.text();
+
+  })
+
+  .then(function(texto) {
+
+    if (!texto || !texto.trim()) {
+
+      throw new Error(
+        "El servidor no devolvió información."
+      );
+
+    }
+
+    let datos;
+
+    try {
+
+      datos = JSON.parse(texto);
+
+    }
+
+    catch(error) {
+
+      /*
+       * Si Apps Script devuelve texto
+       * directamente, también lo aceptamos.
+       */
+
+      mostrarResultado(texto);
+
+      procesando = false;
+
+      return;
+
+    }
+
+
+    if (datos.resultado) {
+
+      mostrarResultado(
+        datos.resultado
+      );
+
+    }
+
+    else {
+
+      mostrarResultado(
+        "❌ RESPUESTA NO VÁLIDA DEL SERVIDOR\n\n" +
+        texto
+      );
+
+    }
+
+
+    procesando = false;
+
+  })
+
+  .catch(function(error) {
+
+    console.error(error);
+
+
+    mostrarResultado(
+
+      "❌ ERROR DE CONEXIÓN\n\n" +
+
+      "No se pudo comunicar con Google Apps Script.\n\n" +
+
+      error.message
+
+    );
+
+
+    procesando = false;
+
+  });
+
+}
+
 
   /*
    * Utilizamos un iframe oculto.
